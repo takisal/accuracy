@@ -208,18 +208,18 @@ func (a *Float) Div(b *Float, d uint) *Float {
 		bTotalPrecision = b.NonDecRep[1:]
 		negativeCount++
 	}
-	dif := int(b.SubOnePrecision) - int(a.SubOnePrecision)
+	precisionDifference := int(b.SubOnePrecision) - int(a.SubOnePrecision)
 	//refers to how many more digits on left of decimal point
 
-	prefixStr, suffixStr := origDivString(aTotalPrecision, bTotalPrecision, max(int(decimalPlaces), int(decimalPlaces)+dif))
+	prefixStr, suffixStr := origDivString(aTotalPrecision, bTotalPrecision, max(int(decimalPlaces), int(decimalPlaces)+precisionDifference))
 	for len(suffixStr) < int(decimalPlaces)+1 {
 		suffixStr = suffixStr + "0"
 	}
 	if len(prefixStr) == 0 {
 		prefixStr = "0"
 	}
-	for dif > 0 {
-		dif--
+	for precisionDifference > 0 {
+		precisionDifference--
 		prefixStr += string(suffixStr[0])
 		suffixStr = suffixStr[1:]
 		if len(suffixStr) == 0 {
@@ -227,8 +227,8 @@ func (a *Float) Div(b *Float, d uint) *Float {
 		}
 	}
 
-	for dif < 0 {
-		dif++
+	for precisionDifference < 0 {
+		precisionDifference++
 		suffixStr = string(prefixStr[len(prefixStr)-1]) + suffixStr
 		prefixStr = prefixStr[:len(prefixStr)-1]
 		if len(prefixStr) == 0 {
@@ -349,17 +349,17 @@ func (a *Float) Add(b *Float) *Float {
 	var negativeCount uint8 = 0
 	var aTotalPrecision string = a.NonDecRep
 	var bTotalPrecision string = b.NonDecRep
-	bneg := false
-	aneg := false
+	bNegative := false
+	aNegative := false
 	if string(a.Value[0]) == "-" {
 		aTotalPrecision = a.NonDecRep[1:]
 		negativeCount++
-		aneg = true
+		aNegative = true
 	}
 	if string(b.Value[0]) == "-" {
 		bTotalPrecision = b.NonDecRep[1:]
 		negativeCount++
-		bneg = true
+		bNegative = true
 	}
 	aString := aTotalPrecision
 	bString := bTotalPrecision
@@ -410,9 +410,8 @@ func (a *Float) Add(b *Float) *Float {
 
 		return returnableAccuracyFloat
 	} else {
-		if aneg == false && bneg == true {
-			tempAF := NewFloat(b.Value[1:])
-			return a.Sub(tempAF)
+		if aNegative == false && bNegative == true {
+			return a.Sub(NewFloat(b.Value[1:]))
 		} else {
 			tempAF := NewFloat(a.Value[1:])
 			newRes := tempAF.Sub(b)
@@ -444,17 +443,17 @@ func (a *Float) Sub(b *Float) *Float {
 	if a.Value == b.Value {
 		return NewFloat("0.0")
 	}
-	bneg := false
-	aneg := false
+	bNegative := false
+	aNegative := false
 	if string(a.Value[0]) == "-" {
 		aTotalPrecision = a.NonDecRep[1:]
 		negativeCount++
-		aneg = true
+		aNegative = true
 	}
 	if string(b.Value[0]) == "-" {
 		bTotalPrecision = b.NonDecRep[1:]
 		negativeCount++
-		bneg = true
+		bNegative = true
 	}
 	if negativeCount == 0 || negativeCount == 2 {
 		aString := aTotalPrecision
@@ -544,7 +543,7 @@ func (a *Float) Sub(b *Float) *Float {
 		if len(suffixStr) == 0 {
 			suffixStr += "0"
 		}
-		if aneg == true && bneg == false {
+		if aNegative == true && bNegative == false {
 			prefixStr = "-" + prefixStr
 		}
 
