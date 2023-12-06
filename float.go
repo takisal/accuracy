@@ -198,20 +198,20 @@ func (a *Float) Div(b *Float, d uint) *Float {
 	}
 
 	var negCount uint8 = 0
-	var atp string = a.NonDecRep
-	var btp string = b.NonDecRep
+	var aTotalPrecision string = a.NonDecRep
+	var bTotalPrecision string = b.NonDecRep
 	if string(a.Value[0]) == "-" {
-		atp = a.NonDecRep[1:]
+		aTotalPrecision = a.NonDecRep[1:]
 		negCount++
 	}
 	if string(b.Value[0]) == "-" {
-		btp = b.NonDecRep[1:]
+		bTotalPrecision = b.NonDecRep[1:]
 		negCount++
 	}
 	dif := int(b.SubOnePrecision) - int(a.SubOnePrecision)
 	//refers to how many more digits on left of decimal point
 
-	prefStr, sufStr := origDivString(atp, btp, max(int(decimalPlaces), int(decimalPlaces)+dif))
+	prefStr, sufStr := origDivString(aTotalPrecision, bTotalPrecision, max(int(decimalPlaces), int(decimalPlaces)+dif))
 	for len(sufStr) < int(decimalPlaces)+1 {
 		sufStr = sufStr + "0"
 	}
@@ -347,35 +347,35 @@ func (a *Float) Div(b *Float, d uint) *Float {
 // Add computes the sum a+b and returns the sum
 func (a *Float) Add(b *Float) *Float {
 	var negCount uint8 = 0
-	var atp string = a.NonDecRep
-	var btp string = b.NonDecRep
+	var aTotalPrecision string = a.NonDecRep
+	var bTotalPrecision string = b.NonDecRep
 	bneg := false
 	aneg := false
 	if string(a.Value[0]) == "-" {
-		atp = a.NonDecRep[1:]
+		aTotalPrecision = a.NonDecRep[1:]
 		negCount++
 		aneg = true
 	}
 	if string(b.Value[0]) == "-" {
-		btp = b.NonDecRep[1:]
+		bTotalPrecision = b.NonDecRep[1:]
 		negCount++
 		bneg = true
 	}
-	astr := atp
-	bstr := btp
+	aString := aTotalPrecision
+	bString := bTotalPrecision
 	if negCount == 0 || negCount == 2 {
-		apd := a.SubOnePrecision
-		bpd := b.SubOnePrecision
-		for apd < bpd {
-			astr += "0"
-			apd++
+		aPrecisionDecimals := a.SubOnePrecision
+		bPrecisionDecimals := b.SubOnePrecision
+		for aPrecisionDecimals < bPrecisionDecimals {
+			aString += "0"
+			aPrecisionDecimals++
 		}
-		for apd > bpd {
-			bstr += "0"
-			bpd++
+		for aPrecisionDecimals > bPrecisionDecimals {
+			bString += "0"
+			bPrecisionDecimals++
 		}
-		var decSpots uint = apd
-		productStr := addstr(astr, bstr)
+		var decSpots uint = aPrecisionDecimals
+		productStr := addstr(aString, bString)
 		sufStr := ""
 		prefStr := ""
 		visSpots := 0
@@ -410,13 +410,10 @@ func (a *Float) Add(b *Float) *Float {
 
 		return retAF
 	} else {
-		//(a == false && b == true) || (a == true && b == false)
-
 		if aneg == false && bneg == true {
 			tempAF := NewFloat(b.Value[1:])
 			return a.Sub(tempAF)
 		} else {
-			//(aneg == true && bneg == false)
 			tempAF := NewFloat(a.Value[1:])
 			newRes := tempAF.Sub(b)
 			if string(newRes.Value[0]) == "-" {
@@ -442,38 +439,38 @@ func (a *Float) Add(b *Float) *Float {
 // Sub computes the difference of a-b and returns the difference
 func (a *Float) Sub(b *Float) *Float {
 	var negCount uint8 = 0
-	var atp string = a.NonDecRep
-	var btp string = b.NonDecRep
+	var aTotalPrecision string = a.NonDecRep
+	var bTotalPrecision string = b.NonDecRep
 	if a.Value == b.Value {
 		return NewFloat("0.0")
 	}
 	bneg := false
 	aneg := false
 	if string(a.Value[0]) == "-" {
-		atp = a.NonDecRep[1:]
+		aTotalPrecision = a.NonDecRep[1:]
 		negCount++
 		aneg = true
 	}
 	if string(b.Value[0]) == "-" {
-		btp = b.NonDecRep[1:]
+		bTotalPrecision = b.NonDecRep[1:]
 		negCount++
 		bneg = true
 	}
 	if negCount == 0 || negCount == 2 {
-		astr := atp
-		bstr := btp
-		apd := a.SubOnePrecision
-		bpd := b.SubOnePrecision
-		for apd < bpd {
-			astr += "0"
-			apd++
+		aString := aTotalPrecision
+		bString := bTotalPrecision
+		aPrecisionDecimals := a.SubOnePrecision
+		bPrecisionDecimals := b.SubOnePrecision
+		for aPrecisionDecimals < bPrecisionDecimals {
+			aString += "0"
+			aPrecisionDecimals++
 		}
-		for apd > bpd {
-			bstr += "0"
-			bpd++
+		for aPrecisionDecimals > bPrecisionDecimals {
+			bString += "0"
+			bPrecisionDecimals++
 		}
-		var decSpots uint = apd
-		productStr := substr(astr, bstr)
+		var decSpots uint = aPrecisionDecimals
+		productStr := subString(aString, bString)
 		sufStr := ""
 		prefStr := ""
 		visSpots := 0
@@ -519,21 +516,20 @@ func (a *Float) Sub(b *Float) *Float {
 
 		return retAF
 	} else {
-		//if aneg == true && bneg == false || aneg == false && bneg == true
-		astr := atp
-		bstr := btp
-		apd := a.SubOnePrecision
-		bpd := b.SubOnePrecision
-		for apd < bpd {
-			astr += "0"
-			apd++
+		aString := aTotalPrecision
+		bString := bTotalPrecision
+		aPrecisionDecimals := a.SubOnePrecision
+		bPrecisionDecimals := b.SubOnePrecision
+		for aPrecisionDecimals < bPrecisionDecimals {
+			aString += "0"
+			aPrecisionDecimals++
 		}
-		for apd > bpd {
-			bstr += "0"
-			bpd++
+		for aPrecisionDecimals > bPrecisionDecimals {
+			bString += "0"
+			bPrecisionDecimals++
 		}
-		var decSpots uint = apd
-		productStr := addstr(astr, bstr)
+		var decSpots uint = aPrecisionDecimals
+		productStr := addstr(aString, bString)
 		sufStr := ""
 		prefStr := ""
 		visSpots := 0
@@ -561,18 +557,18 @@ func (a *Float) Sub(b *Float) *Float {
 // Mul computes the product a*b and returns the product
 func (a *Float) Mul(b *Float) *Float {
 	var negCount uint8 = 0
-	var atp string = a.NonDecRep
-	var btp string = b.NonDecRep
+	var aTotalPrecision string = a.NonDecRep
+	var bTotalPrecision string = b.NonDecRep
 	if string(a.Value[0]) == "-" {
-		atp = a.NonDecRep[1:]
+		aTotalPrecision = a.NonDecRep[1:]
 		negCount++
 	}
 	if string(b.Value[0]) == "-" {
-		btp = b.NonDecRep[1:]
+		bTotalPrecision = b.NonDecRep[1:]
 		negCount++
 	}
 	var decSpots uint = a.SubOnePrecision + b.SubOnePrecision
-	productStr := mulstr(atp, btp)
+	productStr := mulstr(aTotalPrecision, bTotalPrecision)
 	for len(productStr) <= int(decSpots) {
 		productStr = "0" + productStr
 	}
@@ -818,7 +814,7 @@ func addstr(a string, b string) string {
 	return trimstring(valStr)
 
 }
-func substr(f string, s string) string {
+func subString(f string, s string) string {
 	var a string
 	var b string
 	var negatory bool = false
@@ -1007,7 +1003,7 @@ func origDivString(v string, b string, decimalPlaces int) (string, string) {
 
 		}
 		numbelow, actualAmount := findhighestbeloworequal(newv, b)
-		pta := substr(newv, actualAmount)
+		pta := subString(newv, actualAmount)
 		v = pta + v
 		valAr[incfac] += numbelow
 		//subract from first 3 digits and replace
@@ -1058,27 +1054,27 @@ func divString(v string, b string, c int) string {
 		return "0"
 	}
 	numbelow, acAm := findhighestbeloworequal(v, b)
-	remmy := substr(v, acAm)
+	remmy := subString(v, acAm)
 	return strconv.FormatUint(uint64(numbelow), 10) + divString(remmy+"0", b, c-1)
 
 }
-func mulstr(astr string, bstr string) string {
+func mulstr(aString string, bString string) string {
 	//more efficient if a is longer
 	var tstr string
-	if len(astr) < len(bstr) {
-		tstr = astr
-		astr = bstr
-		bstr = tstr
+	if len(aString) < len(bString) {
+		tstr = aString
+		aString = bString
+		bString = tstr
 	}
 	var holder []uint16 = []uint16{0}
 	var a []uint16
 	var b []uint16
-	for i := 0; i < len(astr); i++ {
-		intpar, _ := strconv.ParseUint(string(astr[i]), 10, 8)
+	for i := 0; i < len(aString); i++ {
+		intpar, _ := strconv.ParseUint(string(aString[i]), 10, 8)
 		a = append(a, uint16(intpar))
 	}
-	for i := 0; i < len(bstr); i++ {
-		intpar, _ := strconv.ParseUint(string(bstr[i]), 10, 8)
+	for i := 0; i < len(bString); i++ {
+		intpar, _ := strconv.ParseUint(string(bString[i]), 10, 8)
 		b = append(b, uint16(intpar))
 	}
 	z := 0
