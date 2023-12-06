@@ -57,7 +57,7 @@ func RoundTo(a *Float, d uint) *Float {
 	v := a.Value
 	origSuf := ""
 	origPref := ""
-	var sufAr []uint8
+	var suffixSlice []uint8
 	var prefAr []uint8
 	var tdp bool = false
 	for i := len(v) - 1; i >= 0; i-- {
@@ -68,15 +68,15 @@ func RoundTo(a *Float, d uint) *Float {
 
 			if tdp == false {
 				origSuf = string(v[i]) + origSuf
-				sufAr = append([]uint8{uint8(tempuint)}, sufAr...)
+				suffixSlice = append([]uint8{uint8(tempuint)}, suffixSlice...)
 			} else {
 				origPref = string(v[i]) + origPref
 				prefAr = append([]uint8{uint8(tempuint)}, prefAr...)
 			}
 		}
 	}
-	log.Println(prefAr, sufAr, origPref, origSuf)
-	if d >= uint(len(sufAr)) {
+	log.Println(prefAr, suffixSlice, origPref, origSuf)
+	if d >= uint(len(suffixSlice)) {
 		return NewFloat(origPref + "." + origSuf)
 	}
 	if d == 0 {
@@ -106,10 +106,10 @@ func RoundTo(a *Float, d uint) *Float {
 		if string(origSuf[int(d)]) > "4" {
 			var carryover uint8 = 1
 			for i := int(d) - 1; i >= 0 && carryover == 1; i-- {
-				sufAr[i]++
+				suffixSlice[i]++
 				carryover = 0
-				if sufAr[i] > 9 {
-					sufAr[i] = 0
+				if suffixSlice[i] > 9 {
+					suffixSlice[i] = 0
 					carryover = 1
 				}
 			}
@@ -133,8 +133,8 @@ func RoundTo(a *Float, d uint) *Float {
 				}
 			} else {
 				tempStr := ""
-				for i := 0; i < len(sufAr)-1; i++ {
-					tempStr += strconv.FormatUint(uint64(sufAr[i]), 10)
+				for i := 0; i < len(suffixSlice)-1; i++ {
+					tempStr += strconv.FormatUint(uint64(suffixSlice[i]), 10)
 				}
 				origSuf = tempStr
 			}
@@ -150,9 +150,9 @@ func RoundTo(a *Float, d uint) *Float {
 		origPref = origPref[1:]
 	}
 
-	var retAF *Float = NewFloat(origPref + "." + origSuf)
+	var returnableAccuracyFloat *Float = NewFloat(origPref + "." + origSuf)
 
-	return retAF
+	return returnableAccuracyFloat
 }
 
 // NewFloat allocates and returns a pointer to a new Float set to v
@@ -197,56 +197,56 @@ func (a *Float) Div(b *Float, d uint) *Float {
 		decimalPlaces = 2
 	}
 
-	var negCount uint8 = 0
+	var negativeCount uint8 = 0
 	var aTotalPrecision string = a.NonDecRep
 	var bTotalPrecision string = b.NonDecRep
 	if string(a.Value[0]) == "-" {
 		aTotalPrecision = a.NonDecRep[1:]
-		negCount++
+		negativeCount++
 	}
 	if string(b.Value[0]) == "-" {
 		bTotalPrecision = b.NonDecRep[1:]
-		negCount++
+		negativeCount++
 	}
 	dif := int(b.SubOnePrecision) - int(a.SubOnePrecision)
 	//refers to how many more digits on left of decimal point
 
-	prefStr, sufStr := origDivString(aTotalPrecision, bTotalPrecision, max(int(decimalPlaces), int(decimalPlaces)+dif))
-	for len(sufStr) < int(decimalPlaces)+1 {
-		sufStr = sufStr + "0"
+	prefixStr, suffixStr := origDivString(aTotalPrecision, bTotalPrecision, max(int(decimalPlaces), int(decimalPlaces)+dif))
+	for len(suffixStr) < int(decimalPlaces)+1 {
+		suffixStr = suffixStr + "0"
 	}
-	if len(prefStr) == 0 {
-		prefStr = "0"
+	if len(prefixStr) == 0 {
+		prefixStr = "0"
 	}
 	for dif > 0 {
 		dif--
-		prefStr += string(sufStr[0])
-		sufStr = sufStr[1:]
-		if len(sufStr) == 0 {
-			sufStr = "0"
+		prefixStr += string(suffixStr[0])
+		suffixStr = suffixStr[1:]
+		if len(suffixStr) == 0 {
+			suffixStr = "0"
 		}
 	}
 
 	for dif < 0 {
 		dif++
-		sufStr = string(prefStr[len(prefStr)-1]) + sufStr
-		prefStr = prefStr[:len(prefStr)-1]
-		if len(prefStr) == 0 {
-			prefStr = "0"
+		suffixStr = string(prefixStr[len(prefixStr)-1]) + suffixStr
+		prefixStr = prefixStr[:len(prefixStr)-1]
+		if len(prefixStr) == 0 {
+			prefixStr = "0"
 		}
 
 	}
-	for len(sufStr) > int(decimalPlaces)+1 {
-		sufStr = sufStr[:len(sufStr)-1]
+	for len(suffixStr) > int(decimalPlaces)+1 {
+		suffixStr = suffixStr[:len(suffixStr)-1]
 	}
-	if len(sufStr) < int(decimalPlaces)+1 {
+	if len(suffixStr) < int(decimalPlaces)+1 {
 		log.Println("TOO SHORT SUFFIX")
 	}
 	if d == 0 {
-		if string(sufStr[0]) > "4" {
-			prefAr := make([]uint8, len(prefStr))
-			for i := 0; i < len(prefStr); i++ {
-				tempuint, _ := strconv.Atoi(string(prefStr[i]))
+		if string(suffixStr[0]) > "4" {
+			prefAr := make([]uint8, len(prefixStr))
+			for i := 0; i < len(prefixStr); i++ {
+				tempuint, _ := strconv.Atoi(string(prefixStr[i]))
 				prefAr[i] = uint8(tempuint)
 			}
 			var carryover uint8 = 1
@@ -261,39 +261,39 @@ func (a *Float) Div(b *Float, d uint) *Float {
 			if carryover == 1 {
 				prefAr = append([]uint8{1}, prefAr...)
 			}
-			prefStr = ""
+			prefixStr = ""
 			for i := 0; i < len(prefAr); i++ {
-				prefStr += strconv.FormatUint(uint64(prefAr[i]), 10)
+				prefixStr += strconv.FormatUint(uint64(prefAr[i]), 10)
 			}
-			return NewFloat(prefStr + ".0")
+			return NewFloat(prefixStr + ".0")
 		} else {
-			return NewFloat(prefStr + ".0")
+			return NewFloat(prefixStr + ".0")
 		}
 	}
-	sufAr := make([]uint8, len(sufStr))
-	for i := 0; i < len(sufStr); i++ {
-		tempuint, _ := strconv.Atoi(string(sufStr[i]))
-		sufAr[i] = uint8(tempuint)
+	suffixSlice := make([]uint8, len(suffixStr))
+	for i := 0; i < len(suffixStr); i++ {
+		tempuint, _ := strconv.Atoi(string(suffixStr[i]))
+		suffixSlice[i] = uint8(tempuint)
 	}
-	if sufStr == "0" {
+	if suffixStr == "0" {
 
-	} else if len(sufStr) > 0 && len(sufStr) > (int(decimalPlaces)) && string(sufStr[int(decimalPlaces)]) > "4" {
+	} else if len(suffixStr) > 0 && len(suffixStr) > (int(decimalPlaces)) && string(suffixStr[int(decimalPlaces)]) > "4" {
 		var carryover uint8 = 1
 		for i := decimalPlaces - 1; i >= 0 && carryover == 1; i-- {
 
-			sufAr[i]++
+			suffixSlice[i]++
 			carryover = 0
-			if sufAr[i] > 9 {
-				sufAr[i] = 0
+			if suffixSlice[i] > 9 {
+				suffixSlice[i] = 0
 				carryover = 1
 			}
 		}
 		if carryover == 1 {
 
-			sufStr = "0"
-			prefAr := make([]uint8, len(prefStr))
-			for i := 0; i < len(prefStr); i++ {
-				tempuint, _ := strconv.Atoi(string(prefStr[i]))
+			suffixStr = "0"
+			prefAr := make([]uint8, len(prefixStr))
+			for i := 0; i < len(prefixStr); i++ {
+				tempuint, _ := strconv.Atoi(string(prefixStr[i]))
 				prefAr[i] = uint8(tempuint)
 			}
 			carryover = 1
@@ -309,61 +309,61 @@ func (a *Float) Div(b *Float, d uint) *Float {
 				prefAr = append([]uint8{1}, prefAr...)
 
 			}
-			prefStr = ""
+			prefixStr = ""
 			for i := 0; i < len(prefAr); i++ {
-				prefStr += strconv.FormatUint(uint64(prefAr[i]), 10)
+				prefixStr += strconv.FormatUint(uint64(prefAr[i]), 10)
 			}
 		} else {
 			tempStr := ""
-			for i := 0; i < len(sufAr)-1; i++ {
-				tempStr += strconv.FormatUint(uint64(sufAr[i]), 10)
+			for i := 0; i < len(suffixSlice)-1; i++ {
+				tempStr += strconv.FormatUint(uint64(suffixSlice[i]), 10)
 			}
-			sufStr = tempStr
+			suffixStr = tempStr
 		}
-	} else if len(sufStr) > 0 && len(sufStr) > int(int(decimalPlaces)) {
+	} else if len(suffixStr) > 0 && len(suffixStr) > int(int(decimalPlaces)) {
 
-		sufStr = sufStr[:len(sufStr)-1] + "0"
+		suffixStr = suffixStr[:len(suffixStr)-1] + "0"
 
 	}
 
-	for len(sufStr) > 1 && string(sufStr[len(sufStr)-1]) == "0" {
-		sufStr = sufStr[:(len(sufStr) - 1)]
+	for len(suffixStr) > 1 && string(suffixStr[len(suffixStr)-1]) == "0" {
+		suffixStr = suffixStr[:(len(suffixStr) - 1)]
 	}
-	for len(prefStr) > 1 && string(prefStr[0]) == "0" {
-		prefStr = prefStr[1:]
+	for len(prefixStr) > 1 && string(prefixStr[0]) == "0" {
+		prefixStr = prefixStr[1:]
 	}
-	if negCount == 1 {
-		prefStr = "-" + prefStr
+	if negativeCount == 1 {
+		prefixStr = "-" + prefixStr
 	}
-	for uint(len(sufStr)) > d && d > 0 {
-		sufStr = sufStr[:len(sufStr)-1]
+	for uint(len(suffixStr)) > d && d > 0 {
+		suffixStr = suffixStr[:len(suffixStr)-1]
 	}
-	var retAF *Float = NewFloat(prefStr + "." + sufStr)
+	var returnableAccuracyFloat *Float = NewFloat(prefixStr + "." + suffixStr)
 
-	return retAF
+	return returnableAccuracyFloat
 
 }
 
 // Add computes the sum a+b and returns the sum
 func (a *Float) Add(b *Float) *Float {
-	var negCount uint8 = 0
+	var negativeCount uint8 = 0
 	var aTotalPrecision string = a.NonDecRep
 	var bTotalPrecision string = b.NonDecRep
 	bneg := false
 	aneg := false
 	if string(a.Value[0]) == "-" {
 		aTotalPrecision = a.NonDecRep[1:]
-		negCount++
+		negativeCount++
 		aneg = true
 	}
 	if string(b.Value[0]) == "-" {
 		bTotalPrecision = b.NonDecRep[1:]
-		negCount++
+		negativeCount++
 		bneg = true
 	}
 	aString := aTotalPrecision
 	bString := bTotalPrecision
-	if negCount == 0 || negCount == 2 {
+	if negativeCount == 0 || negativeCount == 2 {
 		aPrecisionDecimals := a.SubOnePrecision
 		bPrecisionDecimals := b.SubOnePrecision
 		for aPrecisionDecimals < bPrecisionDecimals {
@@ -376,39 +376,39 @@ func (a *Float) Add(b *Float) *Float {
 		}
 		var decSpots uint = aPrecisionDecimals
 		productStr := addstr(aString, bString)
-		sufStr := ""
-		prefStr := ""
+		suffixStr := ""
+		prefixStr := ""
 		visSpots := 0
 		for i := len(productStr) - 1; i >= 0; i-- {
 			if visSpots >= int(decSpots) {
-				prefStr = string(productStr[i]) + prefStr
+				prefixStr = string(productStr[i]) + prefixStr
 			} else {
-				sufStr = string(productStr[i]) + sufStr
+				suffixStr = string(productStr[i]) + suffixStr
 			}
 			visSpots++
 		}
-		if len(sufStr) == 0 {
-			sufStr += "0"
+		if len(suffixStr) == 0 {
+			suffixStr += "0"
 		}
-		if negCount == 2 {
-			nzc := 0
-			for i := 0; i < len(prefStr); i++ {
-				if string(prefStr[i]) != "0" {
-					nzc++
+		if negativeCount == 2 {
+			newZeroCount := 0
+			for i := 0; i < len(prefixStr); i++ {
+				if string(prefixStr[i]) != "0" {
+					newZeroCount++
 				}
 			}
-			for i := 0; i < len(sufStr); i++ {
-				if string(sufStr[i]) != "0" {
-					nzc++
+			for i := 0; i < len(suffixStr); i++ {
+				if string(suffixStr[i]) != "0" {
+					newZeroCount++
 				}
 			}
-			if nzc != 0 {
-				prefStr = "-" + prefStr
+			if newZeroCount != 0 {
+				prefixStr = "-" + prefixStr
 			}
 		}
-		var retAF *Float = NewFloat(prefStr + "." + sufStr)
+		var returnableAccuracyFloat *Float = NewFloat(prefixStr + "." + suffixStr)
 
-		return retAF
+		return returnableAccuracyFloat
 	} else {
 		if aneg == false && bneg == true {
 			tempAF := NewFloat(b.Value[1:])
@@ -419,13 +419,13 @@ func (a *Float) Add(b *Float) *Float {
 			if string(newRes.Value[0]) == "-" {
 				return NewFloat(newRes.Value[1:])
 			} else {
-				nzc := 0
+				newZeroCount := 0
 				for i := 0; i < len(newRes.Value); i++ {
 					if string(newRes.Value[i]) != "0" && string(newRes.Value[i]) != "." {
-						nzc++
+						newZeroCount++
 					}
 				}
-				if nzc > 0 {
+				if newZeroCount > 0 {
 					return NewFloat("-" + newRes.Value)
 				} else {
 					return newRes
@@ -438,7 +438,7 @@ func (a *Float) Add(b *Float) *Float {
 
 // Sub computes the difference of a-b and returns the difference
 func (a *Float) Sub(b *Float) *Float {
-	var negCount uint8 = 0
+	var negativeCount uint8 = 0
 	var aTotalPrecision string = a.NonDecRep
 	var bTotalPrecision string = b.NonDecRep
 	if a.Value == b.Value {
@@ -448,15 +448,15 @@ func (a *Float) Sub(b *Float) *Float {
 	aneg := false
 	if string(a.Value[0]) == "-" {
 		aTotalPrecision = a.NonDecRep[1:]
-		negCount++
+		negativeCount++
 		aneg = true
 	}
 	if string(b.Value[0]) == "-" {
 		bTotalPrecision = b.NonDecRep[1:]
-		negCount++
+		negativeCount++
 		bneg = true
 	}
-	if negCount == 0 || negCount == 2 {
+	if negativeCount == 0 || negativeCount == 2 {
 		aString := aTotalPrecision
 		bString := bTotalPrecision
 		aPrecisionDecimals := a.SubOnePrecision
@@ -471,50 +471,50 @@ func (a *Float) Sub(b *Float) *Float {
 		}
 		var decSpots uint = aPrecisionDecimals
 		productStr := subString(aString, bString)
-		sufStr := ""
-		prefStr := ""
+		suffixStr := ""
+		prefixStr := ""
 		visSpots := 0
 		for i := len(productStr) - 1; i >= 0; i-- {
 			if visSpots >= int(decSpots) {
-				prefStr = string(productStr[i]) + prefStr
+				prefixStr = string(productStr[i]) + prefixStr
 			} else {
-				sufStr = string(productStr[i]) + sufStr
+				suffixStr = string(productStr[i]) + suffixStr
 			}
 			visSpots++
 		}
-		for len(sufStr) < int(decSpots) {
-			sufStr = "0" + sufStr
+		for len(suffixStr) < int(decSpots) {
+			suffixStr = "0" + suffixStr
 		}
-		if len(sufStr) == 0 {
-			sufStr = "0"
+		if len(suffixStr) == 0 {
+			suffixStr = "0"
 		}
 
-		if negCount == 2 {
-			if string(prefStr[0]) == "-" {
-				prefStr = prefStr[1:]
+		if negativeCount == 2 {
+			if string(prefixStr[0]) == "-" {
+				prefixStr = prefixStr[1:]
 			} else {
-				nzc := 0
-				for i := 0; i < len(prefStr); i++ {
-					if string(prefStr[i]) != "0" {
-						nzc++
+				newZeroCount := 0
+				for i := 0; i < len(prefixStr); i++ {
+					if string(prefixStr[i]) != "0" {
+						newZeroCount++
 					}
 				}
-				for i := 0; i < len(sufStr); i++ {
-					if string(sufStr[i]) != "0" {
-						nzc++
+				for i := 0; i < len(suffixStr); i++ {
+					if string(suffixStr[i]) != "0" {
+						newZeroCount++
 					}
 				}
-				if nzc != 0 {
-					prefStr = "-" + prefStr
+				if newZeroCount != 0 {
+					prefixStr = "-" + prefixStr
 				}
 			}
 		}
-		if len(prefStr) == 0 {
-			prefStr += "0"
+		if len(prefixStr) == 0 {
+			prefixStr += "0"
 		}
-		var retAF *Float = NewFloat(prefStr + "." + sufStr)
+		var returnableAccuracyFloat *Float = NewFloat(prefixStr + "." + suffixStr)
 
-		return retAF
+		return returnableAccuracyFloat
 	} else {
 		aString := aTotalPrecision
 		bString := bTotalPrecision
@@ -530,74 +530,74 @@ func (a *Float) Sub(b *Float) *Float {
 		}
 		var decSpots uint = aPrecisionDecimals
 		productStr := addstr(aString, bString)
-		sufStr := ""
-		prefStr := ""
+		suffixStr := ""
+		prefixStr := ""
 		visSpots := 0
 		for i := len(productStr) - 1; i >= 0; i-- {
 			if visSpots >= int(decSpots) {
-				prefStr = string(productStr[i]) + prefStr
+				prefixStr = string(productStr[i]) + prefixStr
 			} else {
-				sufStr = string(productStr[i]) + sufStr
+				suffixStr = string(productStr[i]) + suffixStr
 			}
 			visSpots++
 		}
-		if len(sufStr) == 0 {
-			sufStr += "0"
+		if len(suffixStr) == 0 {
+			suffixStr += "0"
 		}
 		if aneg == true && bneg == false {
-			prefStr = "-" + prefStr
+			prefixStr = "-" + prefixStr
 		}
 
-		var retAF *Float = NewFloat(prefStr + "." + sufStr)
+		var returnableAccuracyFloat *Float = NewFloat(prefixStr + "." + suffixStr)
 
-		return retAF
+		return returnableAccuracyFloat
 	}
 }
 
 // Mul computes the product a*b and returns the product
 func (a *Float) Mul(b *Float) *Float {
-	var negCount uint8 = 0
+	var negativeCount uint8 = 0
 	var aTotalPrecision string = a.NonDecRep
 	var bTotalPrecision string = b.NonDecRep
 	if string(a.Value[0]) == "-" {
 		aTotalPrecision = a.NonDecRep[1:]
-		negCount++
+		negativeCount++
 	}
 	if string(b.Value[0]) == "-" {
 		bTotalPrecision = b.NonDecRep[1:]
-		negCount++
+		negativeCount++
 	}
 	var decSpots uint = a.SubOnePrecision + b.SubOnePrecision
 	productStr := mulstr(aTotalPrecision, bTotalPrecision)
 	for len(productStr) <= int(decSpots) {
 		productStr = "0" + productStr
 	}
-	sufStr := ""
-	prefStr := ""
+	suffixStr := ""
+	prefixStr := ""
 	visSpots := 0
 	for i := len(productStr) - 1; i >= 0; i-- {
 		if visSpots >= int(decSpots) {
-			prefStr = string(productStr[i]) + prefStr
+			prefixStr = string(productStr[i]) + prefixStr
 		} else {
-			sufStr = string(productStr[i]) + sufStr
+			suffixStr = string(productStr[i]) + suffixStr
 		}
 		visSpots++
 	}
-	if len(sufStr) == 0 {
-		sufStr = "0"
+	if len(suffixStr) == 0 {
+		suffixStr = "0"
 	}
-	if len(prefStr) == 0 {
-		prefStr = "0"
+	if len(prefixStr) == 0 {
+		prefixStr = "0"
 	}
-	for len(prefStr) > 1 && string(prefStr[0]) == "0" {
-		prefStr = prefStr[:1]
+	for len(prefixStr) > 1 && string(prefixStr[0]) == "0" {
+		prefixStr = prefixStr[:1]
 	}
-	if negCount == 1 {
-		prefStr = "-" + prefStr
+	if negativeCount == 1 {
+		prefixStr = "-" + prefixStr
 	}
-	var retAF *Float = NewFloat(prefStr + "." + sufStr)
+	var returnableAccuracyFloat *Float = NewFloat(prefixStr + "." + suffixStr)
 
-	return retAF
+	return returnableAccuracyFloat
 
 }
 
