@@ -1,4 +1,4 @@
-package accurate
+package accuracy
 
 import (
 	"log"
