@@ -26,7 +26,7 @@ func (x *Float) Set(v string) {
 	x.Value = v
 	var decSpots uint = 0
 	var decBool bool = false
-	var ndc string = ""
+	var nonDecimalRepresentation string = ""
 	for i := 0; i < len(v); i++ {
 		if decBool == true {
 			decSpots++
@@ -34,11 +34,11 @@ func (x *Float) Set(v string) {
 		if string(v[i]) == "." {
 			decBool = true
 		} else {
-			ndc += string(v[i])
+			nonDecimalRepresentation += string(v[i])
 		}
 	}
 	x.SubOnePrecision = decSpots
-	x.NonDecRep = (ndc)
+	x.NonDecRep = (nonDecimalRepresentation)
 
 }
 func Maxi(a *Float, b *Float) *Float {
